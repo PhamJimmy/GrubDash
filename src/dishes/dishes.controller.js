@@ -1,4 +1,3 @@
-const { json } = require("express/lib/response");
 const path = require("path");
 
 // Use the existing dishes data
@@ -9,7 +8,7 @@ const nextId = require("../utils/nextId");
 
 const hasValidProperty = (property) => {
   return (req, res, next) => {
-    const { data = { property } } = req.body;
+    const { data = {} } = req.body;
     if (property === "id") {
       const { dishId } = req.params;
       dishId === data[property] || !data[property] ? next() : next({ status: 400, message: `Dish id does not match: ${data[property]}` });
@@ -65,10 +64,12 @@ const read = (req, res) => {
 const update = (req, res) => {
   const dish = res.locals.dish;
   const { data: { name, description, price, image_url } } = req.body;
+  
   dish.name = name;
   dish.description = description;
   dish.price = price;
   dish.image_url = image_url;
+
   res.json({ data: dish })
 }
 
