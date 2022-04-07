@@ -7,9 +7,13 @@ const dishes = require(path.resolve("src/data/dishes-data"));
 // Use this function to assign ID's when necessary
 const nextId = require("../utils/nextId");
 
-const hasProperty = (property) => {
+const hasValidProperty = (property) => {
   return (req, res, next) => {
     const { data = { property } } = req.body;
+    if (property === "id") {
+      const { dishId } = req.params;
+      dishId === data[property] || !data[property] ? next() : next({ status: 400, message: `Dish id does not match: ${data[property]}` });
+    }
     if (data[property]) {
       if (property === "price") {
         data[property] > 0 && data[property] === Number(data[property]) ? next() : next({ status: 400, message: "Dish must have a price that is an integer greater than 0" })
@@ -58,18 +62,37 @@ const read = (req, res) => {
   res.json({ data: dish })
 }
 
+const update = (req, res) => {
+  const dish = res.locals.dish;
+  const { data: { name, description, price, image_url } } = req.body;
+  dish.name = name;
+  dish.description = description;
+  dish.price = price;
+  dish.image_url = image_url;
+  res.json({ data: dish })
+}
+
 const list = (req, res) => {
   res.json({ data: dishes })
 }
 
 module.exports = {
   create: [
-    hasProperty("name"),
-    hasProperty("description"),
-    hasProperty("price"),
-    hasProperty("image_url"),
-    create
+    hasValidProperty("name"),
+    hasValidProperty("description"),
+    hasValidProperty("price"),
+    hasValidProperty("image_url"),
+    create,
   ],
   read: [dishExists, read],
-  list
-}
+  update: [
+    dishExists,
+    hasValidProperty("name"),
+    hasValidProperty("description"),
+    hasValidProperty("price"),
+    hasValidProperty("image_url"),
+    hasValidProperty("id"),
+    update,
+  ],
+  list,
+};
